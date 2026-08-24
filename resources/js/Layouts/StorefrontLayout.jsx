@@ -1,5 +1,4 @@
 import { usePage } from '@inertiajs/react';
-import { CartProvider } from '@/Contexts/CartContext';
 import SiteNotice from '@/Components/Layout/SiteNotice';
 import AnnouncementBar from '@/Components/Layout/AnnouncementBar';
 import Header from '@/Components/Layout/Header';
@@ -10,7 +9,7 @@ export default function StorefrontLayout({ children }) {
     const { siteNotice, announcementBar, header, footer } = usePage().props;
 
     return (
-        <CartProvider>
+        <>
             <AnnouncementBar announcement={announcementBar} />
             <Header header={header} />
 
@@ -21,6 +20,6 @@ export default function StorefrontLayout({ children }) {
 
             <Footer footer={footer} />
             <CartPopover />
-        </CartProvider>
+        </>
     );
 }

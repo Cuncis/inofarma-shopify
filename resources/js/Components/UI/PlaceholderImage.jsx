@@ -1,4 +1,4 @@
-export default function PlaceholderImage({ label, aspect = 'aspect-square', className = '', fit = 'object-contain' }) {
+export default function PlaceholderImage({ label, aspect = 'aspect-square', className = '', fit = 'object-contain', zoom = false }) {
     if (typeof label === 'string' && /^https?:\/\//.test(label)) {
         return (
             <div className={`overflow-hidden bg-secondary-background ${aspect} ${className}`}>
@@ -6,7 +6,7 @@ export default function PlaceholderImage({ label, aspect = 'aspect-square', clas
                     src={label}
                     alt=""
                     loading="lazy"
-                    className={`h-full w-full ${fit}`}
+                    className={`h-full w-full ${fit} ${zoom ? 'transition-transform duration-500 ease-out group-hover:scale-110' : ''}`}
                 />
             </div>
         );

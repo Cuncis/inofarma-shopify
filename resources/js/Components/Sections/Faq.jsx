@@ -12,9 +12,16 @@ function AccordionItem({ item }) {
                 className="flex w-full items-center justify-between text-left"
             >
                 <span className="text-heading">{item.question}</span>
-                <Icon name={open ? 'minus' : 'plus'} className="h-4 w-4 flex-shrink-0 text-heading" />
+                <Icon
+                    name="plus"
+                    className={`h-4 w-4 flex-shrink-0 text-heading transition-transform duration-300 ${open ? 'rotate-45' : ''}`}
+                />
             </button>
-            {open && <p className="mt-2 text-sm text-text">{item.answer}</p>}
+            <div className={`grid transition-all duration-300 ease-in-out ${open ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
+                <p className="overflow-hidden text-sm text-text">
+                    <span className="block pt-2">{item.answer}</span>
+                </p>
+            </div>
         </div>
     );
 }

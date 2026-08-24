@@ -24,7 +24,7 @@ export default function Testimonials({ section }) {
         <section className="mx-auto max-w-container-narrow px-5 py-10 text-center lap:px-10">
             <h2 className="mb-6 text-xl font-medium text-heading">{section.title}</h2>
 
-            <div className="flex flex-col items-center gap-4">
+            <div key={active} className="flex animate-fade-in-up flex-col items-center gap-4">
                 <PlaceholderImage label={testimonial.image} aspect="aspect-square" className="h-16 w-16 rounded-full" />
                 <p className="text-heading">{testimonial.title}</p>
                 <p className="text-sm text-text">{testimonial.content}</p>
@@ -36,7 +36,7 @@ export default function Testimonials({ section }) {
                     type="button"
                     onClick={() => setActive((current) => (current - 1 + items.length) % items.length)}
                     aria-label="Testimoni sebelumnya"
-                    className="text-heading"
+                    className="text-heading transition hover:scale-110 hover:text-accent"
                 >
                     <Icon name="arrow-left" className="h-4 w-4" />
                 </button>
@@ -48,7 +48,9 @@ export default function Testimonials({ section }) {
                             type="button"
                             onClick={() => setActive(index)}
                             aria-label={`Testimoni ${index + 1}`}
-                            className={`h-2 w-2 rounded-full ${index === active ? 'bg-accent' : 'bg-border'}`}
+                            className={`h-2 rounded-full transition-all duration-300 ${
+                                index === active ? 'w-6 bg-accent' : 'w-2 bg-border hover:bg-heading/40'
+                            }`}
                         />
                     ))}
                 </div>
@@ -57,7 +59,7 @@ export default function Testimonials({ section }) {
                     type="button"
                     onClick={() => setActive((current) => (current + 1) % items.length)}
                     aria-label="Testimoni berikutnya"
-                    className="text-heading"
+                    className="text-heading transition hover:scale-110 hover:text-accent"
                 >
                     <Icon name="arrow-right" className="h-4 w-4" />
                 </button>

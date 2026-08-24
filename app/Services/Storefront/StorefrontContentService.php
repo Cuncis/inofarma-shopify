@@ -71,6 +71,41 @@ class StorefrontContentService
     ];
 
     /**
+     * Friendly titles for collection handles reachable from the header/homepage
+     * nav links. Every collection currently browses the same real product
+     * catalog (Phase 1 has no real per-category product mapping scraped yet)
+     * — Phase 2 replaces this with real Storefront API collection queries.
+     *
+     * @var array<string, string>
+     */
+    private const COLLECTION_TITLES = [
+        'kesehatan' => 'Kesehatan',
+        'kebutuhan-keluarga' => 'Kebutuhan Keluarga',
+        'alat-kesehatan' => 'Alat Kesehatan',
+        'perawatan-tubuh' => 'Perawatan Tubuh',
+        'obat-tradisional' => 'Obat Tradisional',
+        'vitamin-suplemen' => 'Vitamin & Suplemen',
+        'obat-bebas' => 'Obat Bebas',
+        'semua-produk' => 'Semua Produk',
+        'rekomendasi-untukmu' => 'Rekomendasi Untukmu',
+        'produk-kesehatan-terbaru' => 'Produk Kesehatan Terbaru',
+        'produk-terlaris-kami' => 'Produk Terlaris Kami',
+    ];
+
+    private const SORT_OPTIONS = [
+        'featured' => 'Unggulan',
+        'best-selling' => 'Produk terlaris',
+        'title-ascending' => 'Berdasarkan abjad, A-Z',
+        'title-descending' => 'Berdasarkan abjad, Z-A',
+        'price-ascending' => 'Berdasarkan harga, rendah ke tinggi',
+        'price-descending' => 'Berdasarkan harga, tinggi ke rendah',
+        'created-ascending' => 'Berdasarkan tanggal, lama ke baru',
+        'created-descending' => 'Berdasarkan tanggal, baru ke lama',
+    ];
+
+    private const PER_PAGE_OPTIONS = [24, 36, 48];
+
+    /**
      * @return array{message: string, link: string}
      */
     public function siteNotice(): array
@@ -373,6 +408,178 @@ class StorefrontContentService
             fn (string $handle) => $this->productSummary($handle),
             $handles,
         )));
+    }
+
+    /**
+     * @param  array{page?: int, perPage?: int, sort?: string, availability?: array<int, string>, minPrice?: int, maxPrice?: int}  $params
+     * @return array<string, mixed>|null
+     */
+    public function browseCollection(string $handle, array $params = []): ?array
+    {
+        if (! isset(self::COLLECTION_TITLES[$handle])) {
+            return null;
+        }
+
+        $all = $this->allProductSummaries();
+
+        return [
+            'handle' => $handle,
+            'title' => self::COLLECTION_TITLES[$handle],
+            ...$this->filterSortPaginate($all, $params),
+        ];
+    }
+
+    /**
+     * @param  array{page?: int, perPage?: int, sort?: string, availability?: array<int, string>, minPrice?: int, maxPrice?: int}  $params
+     * @return array<string, mixed>
+     */
+    public function search(string $query, array $params = []): array
+    {
+        $needle = mb_strtolower(trim($query));
+
+        $matches = $needle === '' ? [] : array_values(array_filter(
+            $this->allProductSummaries(),
+            fn (array $product) => str_contains(mb_strtolower($product['title']), $needle),
+        ));
+
+        return [
+            'query' => $query,
+            ...$this->filterSortPaginate($matches, $params),
+            'pageResults' => $this->searchPages($needle),
+        ];
+    }
+
+    /**
+     * @return array<int, array{title: string, link: string}>
+     */
+    private function searchPages(string $needle): array
+    {
+        if ($needle === '') {
+            return [];
+        }
+
+        $pages = [
+            ['title' => 'Waspadai PCOS! Jangan Sepelekan Siklus Haid Tidak Teratur', 'link' => '/blogs/news/waspadai-pcos-jangan-sepelekan-siklus-haid-tidak-teratur'],
+            ['title' => 'Jangan Asal Simpan! Ini Cara Tepat Menyimpan Obat-obatan', 'link' => '/blogs/news/jangan-asal-simpan-ini-cara-tepat-menyimpan-obat-obatan'],
+            ['title' => 'Obat yang Wajib Ada dalam Kondisi Darurat', 'link' => '/blogs/news/obat-yang-wajib-ada-dalam-kondisi-darurat'],
+            ['title' => 'Tentang Kami', 'link' => 'https://info.inofarma.com/'],
+            ['title' => 'Karir', 'link' => '/pages/karir'],
+            ['title' => 'Hubungi Kami', 'link' => '/pages/hubungi-kami'],
+        ];
+
+        return array_values(array_filter(
+            $pages,
+            fn (array $page) => str_contains(mb_strtolower($page['title']), $needle),
+        ));
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    private function allProductSummaries(): array
+    {
+        return array_values(array_filter(array_map(
+            fn (string $productHandle) => $this->productSummary($productHandle),
+            array_keys(self::PRODUCT_CATALOG),
+        )));
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $all
+     * @param  array{page?: int, perPage?: int, sort?: string, availability?: array<int, string>, minPrice?: int, maxPrice?: int}  $params
+     * @return array<string, mixed>
+     */
+    private function filterSortPaginate(array $all, array $params): array
+    {
+        $prices = array_column($all, 'price');
+        $priceBounds = $prices === [] ? ['min' => 0, 'max' => 0] : ['min' => min($prices), 'max' => max($prices)];
+
+        $availabilityFilter = array_values(array_intersect(
+            $params['availability'] ?? [],
+            ['in_stock', 'sold_out'],
+        ));
+
+        $filtered = array_values(array_filter($all, function (array $product) use ($availabilityFilter, $params) {
+            if ($availabilityFilter !== []) {
+                $status = $product['available'] ? 'in_stock' : 'sold_out';
+                if (! in_array($status, $availabilityFilter, true)) {
+                    return false;
+                }
+            }
+
+            if (isset($params['minPrice']) && $product['price'] < $params['minPrice']) {
+                return false;
+            }
+
+            if (isset($params['maxPrice']) && $product['price'] > $params['maxPrice']) {
+                return false;
+            }
+
+            return true;
+        }));
+
+        $sort = $params['sort'] ?? 'featured';
+        $filtered = $this->sortProducts($filtered, $sort);
+
+        $perPage = in_array($params['perPage'] ?? null, self::PER_PAGE_OPTIONS, true)
+            ? $params['perPage']
+            : self::PER_PAGE_OPTIONS[0];
+
+        $total = count($filtered);
+        $lastPage = max(1, (int) ceil($total / $perPage));
+        $page = max(1, min($params['page'] ?? 1, $lastPage));
+
+        $pageItems = array_slice($filtered, ($page - 1) * $perPage, $perPage);
+
+        return [
+            'products' => $pageItems,
+            'pagination' => [
+                'currentPage' => $page,
+                'lastPage' => $lastPage,
+                'perPage' => $perPage,
+                'total' => $total,
+                'from' => $total === 0 ? 0 : ($page - 1) * $perPage + 1,
+                'to' => min($page * $perPage, $total),
+            ],
+            'sort' => [
+                'current' => $sort,
+                'options' => collect(self::SORT_OPTIONS)
+                    ->map(fn (string $label, string $value) => ['value' => $value, 'label' => $label])
+                    ->values()
+                    ->all(),
+            ],
+            'perPageOptions' => self::PER_PAGE_OPTIONS,
+            'facets' => [
+                'availability' => [
+                    'in_stock' => ['label' => 'Tersedia', 'count' => count(array_filter($all, fn (array $p) => $p['available']))],
+                    'sold_out' => ['label' => 'Habis', 'count' => count(array_filter($all, fn (array $p) => ! $p['available']))],
+                ],
+                'price' => $priceBounds,
+            ],
+            'filters' => [
+                'availability' => $availabilityFilter,
+                'minPrice' => $params['minPrice'] ?? null,
+                'maxPrice' => $params['maxPrice'] ?? null,
+            ],
+        ];
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $products
+     * @return array<int, array<string, mixed>>
+     */
+    private function sortProducts(array $products, string $sort): array
+    {
+        usort($products, fn (array $a, array $b) => match ($sort) {
+            'title-ascending' => $a['title'] <=> $b['title'],
+            'title-descending' => $b['title'] <=> $a['title'],
+            'price-ascending' => $a['price'] <=> $b['price'],
+            'price-descending' => $b['price'] <=> $a['price'],
+            'created-descending' => array_search($b['id'], array_keys(self::PRODUCT_CATALOG)) <=> array_search($a['id'], array_keys(self::PRODUCT_CATALOG)),
+            default => 0,
+        });
+
+        return $products;
     }
 
     private function brandCollectionList(): array

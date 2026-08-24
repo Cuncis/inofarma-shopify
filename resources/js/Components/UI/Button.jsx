@@ -7,7 +7,7 @@ const VARIANTS = {
 };
 
 export default function Button({ href, variant = 'primary', className = '', children, ...props }) {
-    const classes = `inline-flex h-12 items-center justify-center rounded-sm px-[30px] font-semibold ${VARIANTS[variant]} ${className}`;
+    const classes = `inline-flex h-12 items-center justify-center rounded-sm px-[30px] font-semibold transition-all duration-200 active:scale-95 ${VARIANTS[variant]} ${className}`;
 
     if (href) {
         return (

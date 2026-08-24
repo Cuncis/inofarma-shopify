@@ -12,13 +12,13 @@ export default function BlogPosts({ section }) {
 
             <div className="grid grid-cols-1 gap-6 tablet:grid-cols-3">
                 {section.items.map((post) => (
-                    <a key={post.link} href={post.link} className="block">
-                        <PlaceholderImage label={post.image} aspect="aspect-[16/10]" className="w-full rounded" />
+                    <a key={post.link} href={post.link} className="group block">
+                        <PlaceholderImage label={post.image} aspect="aspect-[16/10]" className="w-full rounded" zoom />
                         <div className="mt-3">
                             {section.showCategory && (
                                 <span className="text-xs font-semibold uppercase text-accent">{post.category}</span>
                             )}
-                            <h3 className="mt-1 text-base text-heading">{post.title}</h3>
+                            <h3 className="mt-1 text-base text-heading transition-colors group-hover:text-accent">{post.title}</h3>
                             <p className="mt-1 text-xs text-text">
                                 {section.showAuthor && post.author}
                                 {section.showAuthor && section.showDate && ' · '}

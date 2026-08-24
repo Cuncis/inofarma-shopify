@@ -66,10 +66,10 @@ export default function BuyBox({ product }) {
                             key={value}
                             type="button"
                             onClick={() => setSelectedValue(value)}
-                            className={`rounded-sm border px-4 py-2 text-sm ${
+                            className={`rounded-sm border px-4 py-2 text-sm transition-all duration-200 ${
                                 value === selectedValue
                                     ? 'border-heading bg-heading text-white'
-                                    : 'border-border text-heading hover:border-heading'
+                                    : 'border-border text-heading hover:border-heading hover:scale-105'
                             }`}
                         >
                             {value}
@@ -82,7 +82,7 @@ export default function BuyBox({ product }) {
                 <button
                     type="button"
                     onClick={() => setQty((current) => Math.max(1, current - 1))}
-                    className="flex h-10 w-10 items-center justify-center rounded-sm border border-border"
+                    className="flex h-10 w-10 items-center justify-center rounded-sm border border-border transition-colors hover:border-heading"
                     aria-label="Kurangi jumlah"
                 >
                     <Icon name="minus" className="h-4 w-4" />
@@ -91,7 +91,7 @@ export default function BuyBox({ product }) {
                 <button
                     type="button"
                     onClick={() => setQty((current) => current + 1)}
-                    className="flex h-10 w-10 items-center justify-center rounded-sm border border-border"
+                    className="flex h-10 w-10 items-center justify-center rounded-sm border border-border transition-colors hover:border-heading"
                     aria-label="Tambah jumlah"
                 >
                     <Icon name="plus" className="h-4 w-4" />
@@ -103,7 +103,7 @@ export default function BuyBox({ product }) {
                     type="button"
                     disabled={isSoldOut}
                     onClick={addToCart}
-                    className="h-12 flex-1 rounded-sm bg-primary-button-bg font-semibold text-primary-button-text hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="h-12 flex-1 rounded-sm bg-primary-button-bg font-semibold text-primary-button-text transition-all duration-200 hover:opacity-90 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                     {isSoldOut ? 'Stok Habis' : 'Tambah ke Keranjang'}
                 </button>
@@ -111,7 +111,7 @@ export default function BuyBox({ product }) {
                     type="button"
                     disabled={isSoldOut}
                     onClick={addToCart}
-                    className="h-12 flex-1 rounded-sm bg-secondary-button-bg font-semibold text-secondary-button-text hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="h-12 flex-1 rounded-sm bg-secondary-button-bg font-semibold text-secondary-button-text transition-all duration-200 hover:opacity-90 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                     Beli Sekarang
                 </button>

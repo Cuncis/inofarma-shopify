@@ -10,15 +10,16 @@ export default function CollectionList({ section }) {
                     <a
                         key={item.customTitle ?? index}
                         href={item.link ?? '#'}
-                        className="flex flex-col items-center gap-3 rounded border border-border bg-secondary-background p-4 text-center"
+                        className="group flex flex-col items-center gap-3 rounded border border-border bg-secondary-background p-4 text-center transition-all duration-300 hover:-translate-y-1 hover:border-transparent hover:shadow-lg"
                     >
                         <PlaceholderImage
                             label={item.image}
                             aspect="aspect-square"
                             className={`w-full ${section.roundImages ? 'rounded-full' : 'rounded'}`}
+                            zoom
                         />
                         {section.showCollectionTitle && item.customTitle && (
-                            <span className="text-sm text-heading">{item.customTitle}</span>
+                            <span className="text-sm text-heading transition-colors group-hover:text-accent">{item.customTitle}</span>
                         )}
                     </a>
                 ))}

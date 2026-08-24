@@ -7,10 +7,14 @@ export default function CollectionListRectangleImage({ section }) {
 
             <div className="grid grid-cols-1 gap-4 tablet:grid-cols-2 lap:grid-cols-4">
                 {section.items.map((item) => (
-                    <a key={item.customTitle} href={item.link} className="block overflow-hidden rounded border border-border">
-                        <PlaceholderImage label={item.image} aspect="aspect-[4/3]" className="w-full" />
+                    <a
+                        key={item.customTitle}
+                        href={item.link}
+                        className="group block overflow-hidden rounded border border-border transition-all duration-300 hover:-translate-y-1 hover:border-transparent hover:shadow-lg"
+                    >
+                        <PlaceholderImage label={item.image} aspect="aspect-[4/3]" className="w-full" zoom />
                         <div className="bg-secondary-background p-3">
-                            <span className="text-sm text-heading">{item.customTitle}</span>
+                            <span className="text-sm text-heading transition-colors group-hover:text-accent">{item.customTitle}</span>
                         </div>
                     </a>
                 ))}

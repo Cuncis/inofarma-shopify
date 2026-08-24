@@ -21,7 +21,7 @@ export default function RichText({ section }) {
             {section.buttonText && (
                 <a
                     href={section.buttonLink}
-                    className="mt-4 inline-flex h-12 items-center rounded-sm bg-primary-button-bg px-[30px] font-semibold text-primary-button-text hover:opacity-90"
+                    className="mt-4 inline-flex h-12 items-center rounded-sm bg-primary-button-bg px-[30px] font-semibold text-primary-button-text transition-all duration-200 hover:opacity-90 active:scale-95"
                 >
                     {section.buttonText}
                 </a>

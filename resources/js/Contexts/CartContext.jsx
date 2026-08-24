@@ -1,10 +1,29 @@
-import { createContext, useContext, useMemo, useState } from 'react';
+import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 
 const CartContext = createContext(null);
+const STORAGE_KEY = 'inofarma-cart';
+
+function readStoredItems() {
+    try {
+        const raw = window.localStorage.getItem(STORAGE_KEY);
+
+        return raw ? JSON.parse(raw) : [];
+    } catch {
+        return [];
+    }
+}
 
 export function CartProvider({ children }) {
-    const [items, setItems] = useState([]);
+    const [items, setItems] = useState(readStoredItems);
     const [isOpen, setIsOpen] = useState(false);
+
+    useEffect(() => {
+        try {
+            window.localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+        } catch {
+            // Storage unavailable (private browsing, quota) — cart stays in-memory only.
+        }
+    }, [items]);
 
     const value = useMemo(() => ({
         items,

@@ -22,19 +22,24 @@ export default function Slideshow({ section }) {
     const showDots = paginationType === 'dots' || paginationType === 'both';
 
     return (
-        <section className="relative">
-            <PlaceholderImage
-                label={slides[active].image}
-                aspect="aspect-[21/9] max-mobile:aspect-[4/3]"
-                className="w-full"
-            />
+        <section className="relative aspect-[21/9] w-full overflow-hidden bg-secondary-background max-mobile:aspect-[4/3]">
+            {slides.map((slide, index) => (
+                <div
+                    key={slide.image}
+                    className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${
+                        index === active ? 'opacity-100' : 'opacity-0'
+                    }`}
+                >
+                    <PlaceholderImage label={slide.image} aspect="h-full" className="w-full" fit="object-cover" />
+                </div>
+            ))}
 
             {showArrows && slides.length > 1 && (
                 <>
                     <button
                         type="button"
                         onClick={() => setActive((current) => (current - 1 + slides.length) % slides.length)}
-                        className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full bg-secondary-background/80 p-2 text-heading"
+                        className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full bg-secondary-background/80 p-2 text-heading transition hover:scale-110 hover:bg-secondary-background"
                         aria-label="Slide sebelumnya"
                     >
                         <Icon name="arrow-left" className="h-4 w-4" />
@@ -42,7 +47,7 @@ export default function Slideshow({ section }) {
                     <button
                         type="button"
                         onClick={() => setActive((current) => (current + 1) % slides.length)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full bg-secondary-background/80 p-2 text-heading"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full bg-secondary-background/80 p-2 text-heading transition hover:scale-110 hover:bg-secondary-background"
                         aria-label="Slide berikutnya"
                     >
                         <Icon name="arrow-right" className="h-4 w-4" />
@@ -58,7 +63,9 @@ export default function Slideshow({ section }) {
                             type="button"
                             onClick={() => setActive(index)}
                             aria-label={`Ke slide ${index + 1}`}
-                            className={`h-2 w-2 rounded-full ${index === active ? 'bg-accent' : 'bg-secondary-background/80'}`}
+                            className={`h-2 rounded-full transition-all duration-300 ${
+                                index === active ? 'w-6 bg-accent' : 'w-2 bg-secondary-background/80 hover:bg-secondary-background'
+                            }`}
                         />
                     ))}
                 </div>

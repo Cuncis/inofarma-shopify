@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Services\Storefront\StorefrontContentService;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -29,11 +30,17 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $content = new StorefrontContentService;
+
         return [
             ...parent::share($request),
             'auth' => [
                 'user' => $request->user(),
             ],
+            'siteNotice' => $content->siteNotice(),
+            'announcementBar' => $content->announcementBar(),
+            'header' => $content->header(),
+            'footer' => $content->footer(),
         ];
     }
 }

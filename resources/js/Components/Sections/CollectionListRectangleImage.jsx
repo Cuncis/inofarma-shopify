@@ -10,9 +10,9 @@ export default function CollectionListRectangleImage({ section }) {
                     <a
                         key={item.customTitle}
                         href={item.link}
-                        className="group block overflow-hidden rounded border border-border transition-all duration-300 hover:-translate-y-1 hover:border-transparent hover:shadow-lg"
+                        className="group block overflow-hidden rounded border border-border"
                     >
-                        <PlaceholderImage label={item.image} aspect="aspect-[4/3]" className="w-full" zoom />
+                        <PlaceholderImage label={item.image} aspect="aspect-[4/3]" className="w-full" />
                         <div className="bg-secondary-background p-3">
                             <span className="text-sm text-heading transition-colors group-hover:text-accent">{item.customTitle}</span>
                         </div>

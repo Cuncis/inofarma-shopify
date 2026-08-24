@@ -13,7 +13,7 @@ export default function BlogPosts({ section }) {
             <div className="grid grid-cols-1 gap-6 tablet:grid-cols-3">
                 {section.items.map((post) => (
                     <a key={post.link} href={post.link} className="group block">
-                        <PlaceholderImage label={post.image} aspect="aspect-[16/10]" className="w-full rounded" zoom />
+                        <PlaceholderImage label={post.image} aspect="aspect-[16/10]" className="w-full rounded" />
                         <div className="mt-3">
                             {section.showCategory && (
                                 <span className="text-xs font-semibold uppercase text-accent">{post.category}</span>

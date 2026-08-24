@@ -11,14 +11,20 @@ function formatPrice(price) {
     }).format(price);
 }
 
-export default function ProductCard({ product, showQuickBuy = false }) {
+const CHROME_BY_VARIANT = {
+    card: 'flex-shrink-0 rounded border border-border bg-secondary-background p-3',
+    table: 'border-b border-r border-border bg-secondary-background p-4',
+};
+
+export default function ProductCard({ product, showQuickBuy = false, variant = 'card' }) {
     const { addItem } = useCart();
     const isSoldOut = product.available === false;
+    const chrome = CHROME_BY_VARIANT[variant] ?? CHROME_BY_VARIANT.card;
 
     return (
-        <div className="group flex w-full flex-shrink-0 flex-col rounded border border-border bg-secondary-background p-3 transition-all duration-300 hover:-translate-y-1 hover:border-transparent hover:shadow-lg">
+        <div className={`group flex w-full flex-col ${chrome}`}>
             <a href={product.link} className="relative block">
-                <PlaceholderImage label={product.image} aspect="aspect-square" zoom />
+                <PlaceholderImage label={product.image} aspect="aspect-square" />
                 {product.badge && (
                     <span className="absolute left-2 top-2 animate-fade-in">
                         <Badge label={product.badge} />
@@ -35,7 +41,7 @@ export default function ProductCard({ product, showQuickBuy = false }) {
                 <span className="mt-3 text-xs uppercase text-text">{product.vendor}</span>
             )}
 
-            <a href={product.link} className={`line-clamp-2 text-sm text-heading transition-colors hover:text-accent hover:underline ${product.vendor ? 'mt-1' : 'mt-3'}`}>
+            <a href={product.link} className={`min-h-[2.5rem] text-sm text-heading transition-colors hover:text-accent ${product.vendor ? 'mt-1' : 'mt-3'}`}>
                 {product.title}
             </a>
 

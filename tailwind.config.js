@@ -45,8 +45,8 @@ export default {
                 'review-star': '#ffbd00',
             },
             maxWidth: {
-                container: '1480px',
-                'container-medium': '1150px',
+                container: '1140px',
+                'container-medium': '960px',
                 'container-narrow': '800px',
                 'container-extra-narrow': '630px',
                 'container-giga-narrow': '520px',

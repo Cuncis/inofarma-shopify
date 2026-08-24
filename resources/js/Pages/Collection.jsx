@@ -60,10 +60,10 @@ export default function Collection({ collection }) {
                         {products.length > 0 ? (
                             <div
                                 key={`${pagination.currentPage}-${sort.current}-${JSON.stringify(filters)}`}
-                                className="mt-6 grid animate-fade-in-up grid-cols-2 gap-4 tablet:grid-cols-3 xl:grid-cols-4"
+                                className="mt-6 grid animate-fade-in-up grid-cols-2 overflow-hidden rounded border border-border tablet:grid-cols-3 xl:grid-cols-4"
                             >
                                 {products.map((product) => (
-                                    <ProductCard key={product.id} product={product} showQuickBuy={false} />
+                                    <ProductCard key={product.id} product={product} showQuickBuy={false} variant="table" />
                                 ))}
                             </div>
                         ) : (

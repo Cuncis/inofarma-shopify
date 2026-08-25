@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import axios from 'axios';
 import { Head } from '@inertiajs/react';
 import StorefrontLayout from '@/Layouts/StorefrontLayout';
 import { useCart } from '@/Contexts/CartContext';
@@ -12,11 +13,6 @@ function formatPrice(price) {
         maximumFractionDigits: 0,
     }).format(price);
 }
-
-const SHIPPING_METHODS = [
-    { id: 'reguler', label: 'Reguler', description: 'Estimasi tiba 2-3 hari', price: 15000 },
-    { id: 'instan', label: 'Instan', description: 'Estimasi tiba hari ini', price: 25000 },
-];
 
 const PAYMENT_METHODS = [
     { id: 'transfer', label: 'Transfer Bank' },
@@ -32,6 +28,10 @@ const COUPONS = {
 const inputClass = 'h-11 w-full rounded-sm border border-border px-3 text-sm text-heading placeholder:text-text focus:border-heading focus:outline-none';
 const labelClass = 'mb-1 block text-sm text-heading';
 
+function rateKey(rate) {
+    return `${rate.courier}:${rate.service}`;
+}
+
 export default function Checkout() {
     const { items, clearCart } = useCart();
     const [form, setForm] = useState({
@@ -44,14 +44,60 @@ export default function Checkout() {
         province: '',
         postalCode: '',
     });
-    const [shippingMethod, setShippingMethod] = useState(SHIPPING_METHODS[0].id);
     const [paymentMethod, setPaymentMethod] = useState(PAYMENT_METHODS[0].id);
-    const [orderNumber, setOrderNumber] = useState(null);
     const [couponCode, setCouponCode] = useState('');
     const [appliedCoupon, setAppliedCoupon] = useState(null);
     const [couponError, setCouponError] = useState('');
 
+    const [rates, setRates] = useState([]);
+    const [ratesLoading, setRatesLoading] = useState(false);
+    const [ratesError, setRatesError] = useState('');
+    const [selectedRateKey, setSelectedRateKey] = useState(null);
+
+    const [submitting, setSubmitting] = useState(false);
+    const [submitError, setSubmitError] = useState('');
+
     const setField = (field) => (event) => setForm((current) => ({ ...current, [field]: event.target.value }));
+
+    useEffect(() => {
+        const postalCode = form.postalCode.trim();
+
+        if (postalCode.length !== 5) {
+            setRates([]);
+            setSelectedRateKey(null);
+            setRatesError('');
+
+            return undefined;
+        }
+
+        setRatesLoading(true);
+        setRatesError('');
+
+        const timeout = setTimeout(() => {
+            axios.post('/checkout/shipping-rates', {
+                postal_code: postalCode,
+                items: items.map((item) => ({ title: item.title, price: item.price, qty: item.qty })),
+            })
+                .then((response) => {
+                    const fetchedRates = response.data.rates ?? [];
+                    setRates(fetchedRates);
+                    setSelectedRateKey(fetchedRates.length > 0 ? rateKey(fetchedRates[0]) : null);
+
+                    if (fetchedRates.length === 0) {
+                        setRatesError('Tidak ada layanan pengiriman untuk kode pos ini.');
+                    }
+                })
+                .catch(() => {
+                    setRates([]);
+                    setSelectedRateKey(null);
+                    setRatesError('Gagal memuat estimasi ongkos kirim. Periksa kode pos Anda.');
+                })
+                .finally(() => setRatesLoading(false));
+        }, 500);
+
+        return () => clearTimeout(timeout);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [form.postalCode]);
 
     const applyCoupon = (event) => {
         event.preventDefault();
@@ -75,47 +121,56 @@ export default function Checkout() {
         setCouponError('');
     };
 
+    const selectedRate = rates.find((rate) => rateKey(rate) === selectedRateKey) ?? null;
     const subtotal = items.reduce((sum, item) => sum + item.price * item.qty, 0);
-    const rawShippingCost = SHIPPING_METHODS.find((method) => method.id === shippingMethod)?.price ?? 0;
+    const rawShippingCost = selectedRate?.price ?? 0;
     const shippingCost = appliedCoupon?.type === 'free_shipping' ? 0 : rawShippingCost;
     const discount = appliedCoupon?.type === 'percent' ? Math.round(subtotal * (appliedCoupon.value / 100)) : 0;
-    const total = subtotal + shippingCost - discount;
+    const total = Math.max(0, subtotal - discount + shippingCost);
 
     const submit = (event) => {
         event.preventDefault();
-        const number = `INO-${Date.now().toString().slice(-8)}`;
-        setOrderNumber(number);
-        clearCart();
+
+        if (!selectedRate) {
+            setSubmitError('Pilih metode pengiriman terlebih dahulu.');
+
+            return;
+        }
+
+        setSubmitting(true);
+        setSubmitError('');
+
+        axios.post('/checkout', {
+            email: form.email,
+            first_name: form.firstName,
+            last_name: form.lastName,
+            phone: form.phone,
+            address: form.address,
+            city: form.city,
+            province: form.province,
+            postal_code: form.postalCode,
+            coupon_code: appliedCoupon?.code ?? null,
+            shipping_courier: selectedRate.courier,
+            shipping_service: selectedRate.service,
+            shipping_cost: selectedRate.price,
+            payment_method: paymentMethod,
+            items: items.map((item) => ({
+                id: String(item.id),
+                title: item.title,
+                price: item.price,
+                qty: item.qty,
+                image: item.image,
+            })),
+        })
+            .then((response) => {
+                clearCart();
+                window.location.href = response.data.redirect_url;
+            })
+            .catch((error) => {
+                setSubmitError(error.response?.data?.message ?? 'Terjadi kesalahan, silakan coba lagi.');
+                setSubmitting(false);
+            });
     };
-
-    if (orderNumber) {
-        return (
-            <StorefrontLayout>
-                <Head title="Pesanan Diterima" />
-
-                <div className="mx-auto max-w-container px-5 py-16 lap:px-10">
-                    <div className="mx-auto flex max-w-md flex-col items-center gap-3 text-center">
-                        <span className="flex h-16 w-16 items-center justify-center rounded-full bg-accent/10 text-accent">
-                            <Icon name="check" className="h-8 w-8" />
-                        </span>
-                        <h1 className="text-2xl font-medium text-heading">Pesanan Anda telah diterima!</h1>
-                        <p className="text-sm text-text">
-                            {'Nomor pesanan Anda '}
-                            <span className="font-semibold text-heading">{orderNumber}</span>
-                            {'. Kami akan mengirimkan konfirmasi ke '}
-                            <span className="font-semibold text-heading">{form.email}</span>.
-                        </p>
-                        <a
-                            href="/"
-                            className="mt-3 inline-flex h-12 items-center rounded-sm bg-primary-button-bg px-8 font-semibold text-primary-button-text transition-all duration-200 hover:opacity-90 active:scale-95"
-                        >
-                            Kembali ke Beranda
-                        </a>
-                    </div>
-                </div>
-            </StorefrontLayout>
-        );
-    }
 
     if (items.length === 0) {
         return (
@@ -223,6 +278,8 @@ export default function Checkout() {
                                         <input
                                             id="postalCode"
                                             required
+                                            inputMode="numeric"
+                                            maxLength={5}
                                             value={form.postalCode}
                                             onChange={setField('postalCode')}
                                             className={inputClass}
@@ -245,31 +302,46 @@ export default function Checkout() {
 
                             <div className="rounded border border-border bg-secondary-background p-5">
                                 <h2 className="font-medium text-heading">Metode Pengiriman</h2>
-                                <div className="mt-4 flex flex-col gap-3">
-                                    {SHIPPING_METHODS.map((method) => (
-                                        <label
-                                            key={method.id}
-                                            className={`flex cursor-pointer items-center justify-between rounded-sm border p-3 text-sm transition-colors ${
-                                                shippingMethod === method.id ? 'border-heading' : 'border-border'
-                                            }`}
-                                        >
-                                            <span className="flex items-center gap-3">
-                                                <input
-                                                    type="radio"
-                                                    name="shippingMethod"
-                                                    checked={shippingMethod === method.id}
-                                                    onChange={() => setShippingMethod(method.id)}
-                                                    className="h-4 w-4 border-border text-accent focus:ring-accent"
-                                                />
-                                                <span>
-                                                    <span className="block text-heading">{method.label}</span>
-                                                    <span className="block text-xs text-text">{method.description}</span>
+
+                                {form.postalCode.trim().length !== 5 && (
+                                    <p className="mt-4 text-sm text-text">Masukkan kode pos untuk melihat pilihan pengiriman.</p>
+                                )}
+
+                                {ratesLoading && (
+                                    <p className="mt-4 text-sm text-text">Menghitung ongkos kirim...</p>
+                                )}
+
+                                {!ratesLoading && ratesError && (
+                                    <p className="mt-4 text-sm text-error">{ratesError}</p>
+                                )}
+
+                                {!ratesLoading && rates.length > 0 && (
+                                    <div className="mt-4 flex flex-col gap-3">
+                                        {rates.map((rate) => (
+                                            <label
+                                                key={rateKey(rate)}
+                                                className={`flex cursor-pointer items-center justify-between rounded-sm border p-3 text-sm transition-colors ${
+                                                    selectedRateKey === rateKey(rate) ? 'border-heading' : 'border-border'
+                                                }`}
+                                            >
+                                                <span className="flex items-center gap-3">
+                                                    <input
+                                                        type="radio"
+                                                        name="shippingMethod"
+                                                        checked={selectedRateKey === rateKey(rate)}
+                                                        onChange={() => setSelectedRateKey(rateKey(rate))}
+                                                        className="h-4 w-4 border-border text-accent focus:ring-accent"
+                                                    />
+                                                    <span>
+                                                        <span className="block text-heading">{`${rate.courier_name} - ${rate.service_name}`}</span>
+                                                        <span className="block text-xs text-text">{rate.duration}</span>
+                                                    </span>
                                                 </span>
-                                            </span>
-                                            <span className="font-semibold text-heading">{formatPrice(method.price)}</span>
-                                        </label>
-                                    ))}
-                                </div>
+                                                <span className="font-semibold text-heading">{formatPrice(rate.price)}</span>
+                                            </label>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
 
                             <div className="rounded border border-border bg-secondary-background p-5">
@@ -364,7 +436,11 @@ export default function Checkout() {
                                 <div className="flex items-center justify-between">
                                     <span className="text-text">Pengiriman</span>
                                     <span className="text-heading">
-                                        {shippingCost === 0 && appliedCoupon?.type === 'free_shipping' ? 'Gratis' : formatPrice(shippingCost)}
+                                        {selectedRate === null
+                                            ? '—'
+                                            : shippingCost === 0 && appliedCoupon?.type === 'free_shipping'
+                                                ? 'Gratis'
+                                                : formatPrice(shippingCost)}
                                     </span>
                                 </div>
                             </div>
@@ -374,11 +450,14 @@ export default function Checkout() {
                                 <span className="text-xl font-semibold text-heading">{formatPrice(total)}</span>
                             </div>
 
+                            {submitError && <p className="mt-3 text-sm text-error">{submitError}</p>}
+
                             <button
                                 type="submit"
-                                className="mt-4 h-12 w-full rounded-sm bg-primary-button-bg font-semibold text-primary-button-text transition-all duration-200 hover:opacity-90 active:scale-95"
+                                disabled={submitting || !selectedRate}
+                                className="mt-4 h-12 w-full rounded-sm bg-primary-button-bg font-semibold text-primary-button-text transition-all duration-200 hover:opacity-90 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
                             >
-                                Bayar Sekarang
+                                {submitting ? 'Memproses...' : 'Bayar Sekarang'}
                             </button>
 
                             <div className="mt-4 flex items-center justify-center gap-2 text-sm text-text">

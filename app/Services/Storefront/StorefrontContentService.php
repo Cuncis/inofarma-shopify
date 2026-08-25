@@ -275,7 +275,7 @@ class StorefrontContentService
             'variant' => 'promo',
             'autoplay' => true,
             'cycleSpeed' => 6,
-            'paginationType' => 'arrows',
+            'paginationType' => 'none',
             'slides' => [
                 ['image' => self::CDN.'pb_1_Desktop.png', 'mobileImage' => self::CDN.'pb_1_mobile.png', 'contentPosition' => 'middle_left', 'showButton' => false],
                 ['image' => self::CDN.'pb_2_Desktop.png', 'mobileImage' => self::CDN.'pb_2_mobile.png', 'contentPosition' => 'middle_left', 'showButton' => false],

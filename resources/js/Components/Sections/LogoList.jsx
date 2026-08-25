@@ -13,7 +13,7 @@ export default function LogoList({ section }) {
                         <PlaceholderImage
                             label={item.image}
                             aspect="aspect-square"
-                            className="w-16"
+                            className="w-10 tablet:w-16"
                         />
                         <span className="text-xs text-heading transition-colors group-hover:text-accent">{item.text}</span>
                     </a>

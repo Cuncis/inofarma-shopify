@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Head } from '@inertiajs/react';
+import { Head, usePage } from '@inertiajs/react';
 import StorefrontLayout from '@/Layouts/StorefrontLayout';
 import { useCart } from '@/Contexts/CartContext';
 import Icon from '@/Components/UI/Icon';
@@ -34,16 +34,17 @@ function rateKey(rate) {
 
 export default function Checkout() {
     const { items, clearCart } = useCart();
-    const [form, setForm] = useState({
-        email: '',
-        firstName: '',
-        lastName: '',
-        phone: '',
-        address: '',
-        city: '',
-        province: '',
-        postalCode: '',
-    });
+    const { auth } = usePage().props;
+    const [form, setForm] = useState(() => ({
+        email: auth.user?.email ?? '',
+        firstName: auth.user?.first_name ?? '',
+        lastName: auth.user?.last_name ?? '',
+        phone: auth.user?.phone ?? '',
+        address: auth.user?.address ?? '',
+        city: auth.user?.city ?? '',
+        province: auth.user?.province ?? '',
+        postalCode: auth.user?.postal_code ?? '',
+    }));
     const [paymentMethod, setPaymentMethod] = useState(PAYMENT_METHODS[0].id);
     const [couponCode, setCouponCode] = useState('');
     const [appliedCoupon, setAppliedCoupon] = useState(null);

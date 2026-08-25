@@ -87,6 +87,7 @@ class CheckoutController extends Controller
         $total = max(0, $subtotal - $discount + $shippingCost);
 
         $order = Order::create([
+            'user_id' => $request->user()?->id,
             'order_number' => 'INO-'.strtoupper(Str::random(10)),
             'email' => $validated['email'],
             'first_name' => $validated['first_name'],

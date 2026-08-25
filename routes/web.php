@@ -9,7 +9,6 @@ use App\Http\Controllers\Storefront\ProductController;
 use App\Http\Controllers\Storefront\SearchController;
 use App\Http\Controllers\Webhooks\DokuWebhookController;
 use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/products/{handle}', [ProductController::class, 'show'])->name('products.show');
@@ -23,10 +22,6 @@ Route::get('/checkout/selesai/{order}', [CheckoutController::class, 'complete'])
 Route::post('/webhooks/doku', [DokuWebhookController::class, 'handle'])->name('webhooks.doku');
 Route::get('/search', [SearchController::class, 'show'])->name('search.show');
 Route::get('/search/predictive', [SearchController::class, 'predictive'])->name('search.predictive');
-
-Route::get('/dashboard', function () {
-    return Inertia::render('Dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

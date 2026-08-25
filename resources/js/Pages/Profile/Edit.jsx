@@ -1,39 +1,35 @@
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
+import StorefrontLayout from '@/Layouts/StorefrontLayout';
 import DeleteUserForm from './Partials/DeleteUserForm';
 import UpdatePasswordForm from './Partials/UpdatePasswordForm';
 import UpdateProfileInformationForm from './Partials/UpdateProfileInformationForm';
 
 export default function Edit({ mustVerifyEmail, status }) {
     return (
-        <AuthenticatedLayout
-            header={
-                <h2 className="text-xl font-semibold leading-tight text-gray-800">
-                    Profile
-                </h2>
-            }
-        >
-            <Head title="Profile" />
+        <StorefrontLayout>
+            <Head title="Akun Saya" />
 
-            <div className="py-12">
-                <div className="mx-auto max-w-7xl space-y-6 sm:px-6 lg:px-8">
-                    <div className="bg-white p-4 shadow sm:rounded-lg sm:p-8">
-                        <UpdateProfileInformationForm
-                            mustVerifyEmail={mustVerifyEmail}
-                            status={status}
-                            className="max-w-xl"
-                        />
+            <div className="bg-background">
+                <div className="mx-auto max-w-container px-5 py-8 lap:px-10">
+                    <div className="flex items-center justify-between">
+                        <h1 className="text-2xl font-medium text-heading">Akun Saya</h1>
+                        <Link
+                            href={route('logout')}
+                            method="post"
+                            as="button"
+                            className="text-sm font-semibold text-text transition-colors hover:text-error"
+                        >
+                            Keluar
+                        </Link>
                     </div>
 
-                    <div className="bg-white p-4 shadow sm:rounded-lg sm:p-8">
-                        <UpdatePasswordForm className="max-w-xl" />
-                    </div>
-
-                    <div className="bg-white p-4 shadow sm:rounded-lg sm:p-8">
-                        <DeleteUserForm className="max-w-xl" />
+                    <div className="mx-auto mt-6 flex w-full max-w-2xl flex-col gap-6">
+                        <UpdateProfileInformationForm mustVerifyEmail={mustVerifyEmail} status={status} />
+                        <UpdatePasswordForm />
+                        <DeleteUserForm />
                     </div>
                 </div>
             </div>
-        </AuthenticatedLayout>
+        </StorefrontLayout>
     );
 }

@@ -157,7 +157,7 @@ export default function Header({ header }) {
 
                 <div className="ml-auto flex items-center gap-6">
                     <Link
-                        href={isAuthenticated ? route('dashboard') : route('login')}
+                        href={isAuthenticated ? route('profile.edit') : route('login')}
                         className="hidden flex-col text-right tablet:flex"
                     >
                         <span className="text-xs text-header-light-text">

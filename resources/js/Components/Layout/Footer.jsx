@@ -4,7 +4,7 @@ export default function Footer({ footer }) {
     const [email, setEmail] = useState('');
 
     return (
-        <footer className="bg-secondary-button-bg">
+        <footer className="bg-header-bg">
             <div className="mx-auto max-w-container px-5 py-12 lap:px-10">
                 <div className="grid grid-cols-1 gap-10 tablet:grid-cols-3">
                     <div>

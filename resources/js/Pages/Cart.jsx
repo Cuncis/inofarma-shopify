@@ -4,6 +4,7 @@ import StorefrontLayout from '@/Layouts/StorefrontLayout';
 import { useCart } from '@/Contexts/CartContext';
 import Icon from '@/Components/UI/Icon';
 import PlaceholderImage from '@/Components/UI/PlaceholderImage';
+import FeaturedCollection from '@/Components/Sections/FeaturedCollection';
 
 function formatPrice(price) {
     return new Intl.NumberFormat('id-ID', {
@@ -13,7 +14,7 @@ function formatPrice(price) {
     }).format(price);
 }
 
-export default function Cart() {
+export default function Cart({ recentlyViewed = [] }) {
     const { items, updateQty, removeItem } = useCart();
     const [notesOpen, setNotesOpen] = useState(false);
     const total = items.reduce((sum, item) => sum + item.price * item.qty, 0);
@@ -29,8 +30,7 @@ export default function Cart() {
                     </h1>
 
                     {items.length === 0 ? (
-                        <div className="flex flex-col items-center gap-4 py-24 text-center">
-                            <Icon name="cart" className="h-16 w-16 text-heading" />
+                        <div className="flex flex-col items-center gap-4 py-12 text-center">
                             <p className="text-xl font-medium text-heading">Keranjang Anda kosong</p>
                             <a
                                 href="/collections/semua-produk"
@@ -137,6 +137,16 @@ export default function Cart() {
                     )}
                 </div>
             </div>
+
+            {items.length === 0 && recentlyViewed.length > 0 && (
+                <FeaturedCollection
+                    section={{
+                        title: 'Baru Saja Dilihat',
+                        products: recentlyViewed,
+                        showQuickBuy: true,
+                    }}
+                />
+            )}
         </StorefrontLayout>
     );
 }

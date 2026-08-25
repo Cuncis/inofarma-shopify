@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link, router } from '@inertiajs/react';
+import { Link, router, usePage } from '@inertiajs/react';
 import axios from 'axios';
 import { useCart } from '@/Contexts/CartContext';
 import Icon from '@/Components/UI/Icon';
@@ -141,6 +141,8 @@ function SearchForm({ className = '' }) {
 export default function Header({ header }) {
     const { items, toggle } = useCart();
     const itemCount = items.reduce((total, item) => total + item.qty, 0);
+    const { auth } = usePage().props;
+    const isAuthenticated = Boolean(auth?.user);
 
     return (
         <header className="bg-header-bg">
@@ -154,8 +156,13 @@ export default function Header({ header }) {
                 </div>
 
                 <div className="ml-auto flex items-center gap-6">
-                    <Link href="/account" className="hidden flex-col text-right tablet:flex">
-                        <span className="text-xs text-header-light-text">Masuk / Daftar</span>
+                    <Link
+                        href={isAuthenticated ? route('dashboard') : route('login')}
+                        className="hidden flex-col text-right tablet:flex"
+                    >
+                        <span className="text-xs text-header-light-text">
+                            {isAuthenticated ? auth.user.name : 'Masuk / Daftar'}
+                        </span>
                         <span className="text-sm font-semibold text-header-text">Akun saya</span>
                     </Link>
 

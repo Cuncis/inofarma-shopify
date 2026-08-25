@@ -112,12 +112,12 @@ export default function CartPopover() {
                                 <span className="text-text">Subtotal</span>
                                 <span className="font-semibold text-heading">{formatPrice(subtotal)}</span>
                             </div>
-                            <button
-                                type="button"
-                                className="mt-3 h-12 w-full rounded-sm bg-primary-button-bg font-semibold text-primary-button-text transition-all duration-200 hover:opacity-90 active:scale-95"
+                            <a
+                                href="/checkout"
+                                className="mt-3 flex h-12 w-full items-center justify-center rounded-sm bg-primary-button-bg font-semibold text-primary-button-text transition-all duration-200 hover:opacity-90 active:scale-95"
                             >
                                 Checkout
-                            </button>
+                            </a>
                             <a href="/cart" className="mt-2 block text-center text-sm text-accent transition-colors hover:underline">
                                 Lihat keranjang lengkap
                             </a>

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Head } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 import StorefrontLayout from '@/Layouts/StorefrontLayout';
 import { useCart } from '@/Contexts/CartContext';
 import Icon from '@/Components/UI/Icon';
@@ -119,12 +119,12 @@ export default function Cart({ recentlyViewed = [] }) {
 
                                 <p className="text-sm text-text">Pajak dan ongkos kirim dihitung saat pembayaran</p>
 
-                                <button
-                                    type="button"
-                                    className="mt-4 h-12 w-full rounded-sm bg-primary-button-bg font-semibold text-primary-button-text transition-all duration-200 hover:opacity-90 active:scale-95"
+                                <Link
+                                    href="/checkout"
+                                    className="mt-4 flex h-12 w-full items-center justify-center rounded-sm bg-primary-button-bg font-semibold text-primary-button-text transition-all duration-200 hover:opacity-90 active:scale-95"
                                 >
                                     Check-out
-                                </button>
+                                </Link>
                             </div>
                         </div>
                     )}

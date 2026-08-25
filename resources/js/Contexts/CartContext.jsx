@@ -61,6 +61,7 @@ export function CartProvider({ children }) {
                 item.id === id ? { ...item, qty } : item
             )));
         },
+        clearCart: () => setItems([]),
     }), [items, isOpen]);
 
     return (

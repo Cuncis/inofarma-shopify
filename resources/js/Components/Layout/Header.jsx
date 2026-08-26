@@ -152,7 +152,7 @@ export default function Header({ header }) {
                 </Link>
 
                 <div className="hidden flex-1 tablet:block">
-                    <SearchForm className="max-w-xl" />
+                    <SearchForm />
                 </div>
 
                 <div className="ml-auto flex items-center gap-6">
@@ -165,6 +165,8 @@ export default function Header({ header }) {
                         </span>
                         <span className="text-sm font-semibold text-header-text">Akun saya</span>
                     </Link>
+
+                    <div className="hidden h-8 w-px bg-header-text/20 tablet:block" />
 
                     <button
                         type="button"

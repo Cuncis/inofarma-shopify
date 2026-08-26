@@ -199,32 +199,6 @@ class StorefrontContentService
             $this->blogPosts(),
             $this->bannerSlideshow(),
             $this->testimonials(),
-            $this->richText(
-                'Apotek Inofarma: Solusi Kesehatan Terhemat dan Terlengkap',
-                'Apotek Inofarma hadir sebagai solusi kesehatan terpercaya dengan jaringan '
-                .'apotek yang mudah dijangkau dan layanan yang selalu mengutamakan kebutuhan '
-                .'pelanggan. Kami menyediakan produk kesehatan terlengkap, vitamin, suplemen, '
-                .'dan perawatan diri dengan harga terhemat dan layanan yang bersahabat. Apotek '
-                .'Inofarma juga memberikan konsultasi obat gratis dan cek kesehatan dasar '
-                .'dengan apoteker profesional. Kami berkomitmen untuk selalu menghadirkan '
-                .'program dan penawaran menarik, siap membantu Anda menjaga kesehatan dengan '
-                .'cara yang mudah, aman, dan praktis.',
-            ),
-            $this->richText(
-                'Belanja Obat Praktis dengan Layanan Antar 24 Jam',
-                'Belanja produk kesehatan kini lebih mudah bersama Apotek Inofarma. Dengan '
-                .'layanan apotek buka 24 jam dan antar obat gratis*, kami siap memenuhi '
-                .'kebutuhan kesehatan Anda kapan saja, di mana saja. Pemesanan obat dapat '
-                .'dilakukan dengan mudah melalui WhatsApp, sehingga Anda dapat menerima obat '
-                .'dengan cepat tanpa repot. Apotek Inofarma juga menyediakan tes darah cepat '
-                .'(asam urat, gula darah, kolesterol total) dengan harga terjangkau untuk '
-                .'membantu Anda memantau kesehatan secara berkala. Selain itu, pelanggan setia '
-                .'Sobat Ino dapat menikmati berbagai benefit member eksklusif (untuk pembelian '
-                .'di outlet). Semua produk dijamin asli, terdaftar BPOM, dan berkualitas '
-                .'tinggi. Bersama Apotek Inofarma, kesehatan selalu lebih dekat, hemat, dan '
-                .'bersahabat.',
-                '*S&K berlaku',
-            ),
             $this->faq(),
         ];
     }
@@ -733,17 +707,6 @@ class StorefrontContentService
                 'content' => $item['content'],
                 'author' => $item['author'],
             ], $items, array_keys($items)),
-        ];
-    }
-
-    private function richText(string $title, string $content, ?string $note = null): array
-    {
-        return [
-            'type' => 'rich-text',
-            'title' => $title,
-            'content' => '<p>'.$content.'</p>'.($note ? '<p><small>'.$note.'</small></p>' : ''),
-            'textAlign' => 'center',
-            'textWidth' => 'medium',
         ];
     }
 

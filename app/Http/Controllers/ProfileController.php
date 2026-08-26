@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
+use App\Services\Shopify\ShopifyAdminClient;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -10,28 +11,25 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
 use Inertia\Response;
+use RuntimeException;
 
 class ProfileController extends Controller
 {
     /**
      * Display the user's profile form.
      */
-    public function edit(Request $request): Response
+    public function edit(Request $request, ShopifyAdminClient $shopifyAdmin): Response
     {
+        try {
+            $orders = $shopifyAdmin->ordersForEmail($request->user()->email);
+        } catch (RuntimeException) {
+            $orders = [];
+        }
+
         return Inertia::render('Profile/Edit', [
             'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
             'status' => session('status'),
-            'orders' => $request->user()->orders()
-                ->withCount('items')
-                ->latest()
-                ->get()
-                ->map(fn ($order) => [
-                    'orderNumber' => $order->order_number,
-                    'date' => $order->created_at->toIso8601String(),
-                    'itemCount' => $order->items_count,
-                    'total' => $order->total,
-                    'paymentStatus' => $order->payment_status,
-                ]),
+            'orders' => $orders,
         ]);
     }
 

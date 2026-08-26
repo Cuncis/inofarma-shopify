@@ -1,68 +1,51 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import axios from 'axios';
 
 const CartContext = createContext(null);
-const STORAGE_KEY = 'inofarma-cart';
 
-function readStoredItems() {
-    try {
-        const raw = window.localStorage.getItem(STORAGE_KEY);
-
-        return raw ? JSON.parse(raw) : [];
-    } catch {
-        return [];
-    }
-}
+const EMPTY_CART = { id: null, checkoutUrl: null, itemCount: 0, subtotal: 0, items: [] };
 
 export function CartProvider({ children }) {
-    const [items, setItems] = useState(readStoredItems);
+    const [cart, setCart] = useState(EMPTY_CART);
     const [isOpen, setIsOpen] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
-        try {
-            window.localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-        } catch {
-            // Storage unavailable (private browsing, quota) — cart stays in-memory only.
-        }
-    }, [items]);
+        axios.get('/api/cart')
+            .then((response) => setCart(response.data))
+            .catch(() => {});
+    }, []);
 
     const value = useMemo(() => ({
-        items,
+        items: cart.items,
+        itemCount: cart.itemCount,
+        subtotal: cart.subtotal,
+        checkoutUrl: cart.checkoutUrl,
         isOpen,
+        isLoading,
         open: () => setIsOpen(true),
         close: () => setIsOpen(false),
         toggle: () => setIsOpen((open) => !open),
-        addItem: (product, qty = 1) => {
-            setItems((current) => {
-                const existing = current.find((item) => item.id === product.id);
+        addItem: async (handle, qty = 1) => {
+            setIsLoading(true);
 
-                if (existing) {
-                    return current.map((item) => (
-                        item.id === product.id
-                            ? { ...item, qty: item.qty + qty }
-                            : item
-                    ));
-                }
-
-                return [...current, { ...product, qty }];
-            });
-            setIsOpen(true);
-        },
-        removeItem: (id) => {
-            setItems((current) => current.filter((item) => item.id !== id));
-        },
-        updateQty: (id, qty) => {
-            if (qty < 1) {
-                setItems((current) => current.filter((item) => item.id !== id));
-
-                return;
+            try {
+                const response = await axios.post('/api/cart/lines', { handle, qty });
+                setCart(response.data);
+                setIsOpen(true);
+            } finally {
+                setIsLoading(false);
             }
-
-            setItems((current) => current.map((item) => (
-                item.id === id ? { ...item, qty } : item
-            )));
         },
-        clearCart: () => setItems([]),
-    }), [items, isOpen]);
+        removeItem: async (lineId) => {
+            const response = await axios.post('/api/cart/lines/remove', { lineId });
+            setCart(response.data);
+        },
+        updateQty: async (lineId, qty) => {
+            const response = await axios.post('/api/cart/lines/update', { lineId, qty });
+            setCart(response.data);
+        },
+    }), [cart, isOpen, isLoading]);
 
     return (
         <CartContext.Provider value={value}>

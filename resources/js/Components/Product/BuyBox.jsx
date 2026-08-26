@@ -31,12 +31,7 @@ export default function BuyBox({ product }) {
     const isSoldOut = variant.stockStatus === 'sold_out';
 
     const addToCart = () => {
-        addItem({
-            id: variant.id,
-            title: `${product.title} - ${variant.title}`,
-            price: variant.price,
-            image: product.images[0],
-        }, qty);
+        addItem(product.handle, qty);
     };
 
     return (

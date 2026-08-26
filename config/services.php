@@ -35,17 +35,11 @@ return [
         ],
     ],
 
-    'doku' => [
-        'client_id' => env('DOKU_CLIENT_ID'),
-        'secret_key' => env('DOKU_SECRET_KEY'),
-        'production' => (bool) env('DOKU_PRODUCTION', false),
-    ],
-
-    'biteship' => [
-        'api_key' => env('BITESHIP_API_KEY'),
-        'webhook_token' => env('BITESHIP_WEBHOOK_TOKEN'),
-        'origin_postal_code' => env('BITESHIP_ORIGIN_POSTAL_CODE', '14320'),
-        'couriers' => env('BITESHIP_COURIERS', 'jne,jnt,sicepat,anteraja'),
+    'shopify' => [
+        'domain' => preg_replace('#^https?://#', '', rtrim((string) env('SHOPIFY_STORE_DOMAIN'), '/')),
+        'storefront_token' => env('SHOPIFY_STOREFRONT_ACCESS_TOKEN'),
+        'admin_token' => env('SHOPIFY_ADMIN_ACCESS_TOKEN'),
+        'api_version' => env('SHOPIFY_API_VERSION', '2026-07'),
     ],
 
 ];

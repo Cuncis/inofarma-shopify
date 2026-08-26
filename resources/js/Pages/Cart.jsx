@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Head, Link } from '@inertiajs/react';
+import { Head } from '@inertiajs/react';
 import StorefrontLayout from '@/Layouts/StorefrontLayout';
 import { useCart } from '@/Contexts/CartContext';
 import Icon from '@/Components/UI/Icon';
@@ -15,7 +15,7 @@ function formatPrice(price) {
 }
 
 export default function Cart({ recentlyViewed = [] }) {
-    const { items, updateQty, removeItem } = useCart();
+    const { items, updateQty, removeItem, checkoutUrl } = useCart();
     const [notesOpen, setNotesOpen] = useState(false);
     const total = items.reduce((sum, item) => sum + item.price * item.qty, 0);
 
@@ -49,7 +49,7 @@ export default function Cart({ recentlyViewed = [] }) {
                                 </div>
 
                                 {items.map((item) => (
-                                    <div key={item.id} className="grid grid-cols-1 gap-4 border-b border-border px-5 py-4 last:border-b-0 tablet:grid-cols-[2fr_1fr_1fr] tablet:items-center">
+                                    <div key={item.lineId} className="grid grid-cols-1 gap-4 border-b border-border px-5 py-4 last:border-b-0 tablet:grid-cols-[2fr_1fr_1fr] tablet:items-center">
                                         <div className="flex gap-3">
                                             <PlaceholderImage label={item.image} className="h-16 w-16 flex-shrink-0" />
                                             <div>
@@ -63,7 +63,7 @@ export default function Cart({ recentlyViewed = [] }) {
                                             <div className="flex items-center gap-2">
                                                 <button
                                                     type="button"
-                                                    onClick={() => updateQty(item.id, item.qty - 1)}
+                                                    onClick={() => updateQty(item.lineId, item.qty - 1)}
                                                     className="flex h-8 w-8 items-center justify-center rounded-sm border border-border transition-colors hover:border-heading"
                                                     aria-label="Kurangi jumlah"
                                                 >
@@ -72,7 +72,7 @@ export default function Cart({ recentlyViewed = [] }) {
                                                 <span className="w-8 text-center">{item.qty}</span>
                                                 <button
                                                     type="button"
-                                                    onClick={() => updateQty(item.id, item.qty + 1)}
+                                                    onClick={() => updateQty(item.lineId, item.qty + 1)}
                                                     className="flex h-8 w-8 items-center justify-center rounded-sm border border-border transition-colors hover:border-heading"
                                                     aria-label="Tambah jumlah"
                                                 >
@@ -81,7 +81,7 @@ export default function Cart({ recentlyViewed = [] }) {
                                             </div>
                                             <button
                                                 type="button"
-                                                onClick={() => removeItem(item.id)}
+                                                onClick={() => removeItem(item.lineId)}
                                                 className="mt-2 text-sm text-text underline transition-colors hover:text-error"
                                             >
                                                 Menghapus
@@ -119,12 +119,12 @@ export default function Cart({ recentlyViewed = [] }) {
 
                                 <p className="text-sm text-text">Pajak dan ongkos kirim dihitung saat pembayaran</p>
 
-                                <Link
-                                    href="/checkout"
+                                <a
+                                    href={checkoutUrl}
                                     className="mt-4 flex h-12 w-full items-center justify-center rounded-sm bg-primary-button-bg font-semibold text-primary-button-text transition-all duration-200 hover:opacity-90 active:scale-95"
                                 >
                                     Check-out
-                                </Link>
+                                </a>
                             </div>
                         </div>
                     )}

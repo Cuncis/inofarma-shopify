@@ -12,7 +12,7 @@ function formatPrice(cents) {
 }
 
 export default function CartPopover() {
-    const { items, isOpen, close, removeItem, updateQty } = useCart();
+    const { items, isOpen, close, removeItem, updateQty, checkoutUrl } = useCart();
     const [mounted, setMounted] = useState(false);
     const [visible, setVisible] = useState(false);
 
@@ -69,7 +69,7 @@ export default function CartPopover() {
                     <>
                         <ul className="max-h-80 space-y-4 overflow-y-auto p-4">
                             {items.map((item) => (
-                                <li key={item.id} className="flex animate-fade-in gap-3">
+                                <li key={item.lineId} className="flex animate-fade-in gap-3">
                                     <PlaceholderImage label={item.image} className="h-16 w-16 flex-shrink-0" />
                                     <div className="flex flex-1 flex-col">
                                         <span className="text-sm text-heading">{item.title}</span>
@@ -79,7 +79,7 @@ export default function CartPopover() {
                                         <div className="mt-2 flex items-center gap-2">
                                             <button
                                                 type="button"
-                                                onClick={() => updateQty(item.id, item.qty - 1)}
+                                                onClick={() => updateQty(item.lineId, item.qty - 1)}
                                                 className="flex h-6 w-6 items-center justify-center rounded-sm border border-border transition-colors hover:border-heading"
                                                 aria-label="Kurangi jumlah"
                                             >
@@ -88,7 +88,7 @@ export default function CartPopover() {
                                             <span className="w-6 text-center text-sm">{item.qty}</span>
                                             <button
                                                 type="button"
-                                                onClick={() => updateQty(item.id, item.qty + 1)}
+                                                onClick={() => updateQty(item.lineId, item.qty + 1)}
                                                 className="flex h-6 w-6 items-center justify-center rounded-sm border border-border transition-colors hover:border-heading"
                                                 aria-label="Tambah jumlah"
                                             >
@@ -96,7 +96,7 @@ export default function CartPopover() {
                                             </button>
                                             <button
                                                 type="button"
-                                                onClick={() => removeItem(item.id)}
+                                                onClick={() => removeItem(item.lineId)}
                                                 className="ml-auto text-xs text-text transition-colors hover:text-error"
                                             >
                                                 Hapus
@@ -113,7 +113,7 @@ export default function CartPopover() {
                                 <span className="font-semibold text-heading">{formatPrice(subtotal)}</span>
                             </div>
                             <a
-                                href="/checkout"
+                                href={checkoutUrl}
                                 className="mt-3 flex h-12 w-full items-center justify-center rounded-sm bg-primary-button-bg font-semibold text-primary-button-text transition-all duration-200 hover:opacity-90 active:scale-95"
                             >
                                 Checkout

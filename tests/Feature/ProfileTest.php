@@ -4,6 +4,8 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class ProfileTest extends TestCase
@@ -19,6 +21,59 @@ class ProfileTest extends TestCase
             ->get('/profile');
 
         $response->assertOk();
+    }
+
+    public function test_order_history_is_sourced_from_shopify_admin_api(): void
+    {
+        config([
+            'services.shopify.domain' => 'test-shop.myshopify.com',
+            'services.shopify.admin_token' => 'admin-test-token',
+            'services.shopify.api_version' => '2025-01',
+        ]);
+
+        $user = User::factory()->create(['email' => 'buyer@example.com']);
+
+        Http::fake(fn () => Http::response(['data' => ['orders' => ['nodes' => [
+            [
+                'name' => '#1001',
+                'createdAt' => '2026-08-20T10:00:00Z',
+                'displayFinancialStatus' => 'PAID',
+                'statusPageUrl' => 'https://test-shop.myshopify.com/orders/abc/status',
+                'currentTotalPriceSet' => ['shopMoney' => ['amount' => '45000.0']],
+                'lineItems' => ['nodes' => [['quantity' => 2], ['quantity' => 1]]],
+            ],
+        ]]]]));
+
+        $response = $this->actingAs($user)->get('/profile');
+
+        $response->assertOk();
+        $response->assertInertia(fn (Assert $page) => $page
+            ->component('Profile/Edit')
+            ->where('orders.0.orderNumber', '#1001')
+            ->where('orders.0.itemCount', 3)
+            ->where('orders.0.total', 45000)
+            ->where('orders.0.paymentStatus', 'paid')
+            ->where('orders.0.statusPageUrl', 'https://test-shop.myshopify.com/orders/abc/status'));
+    }
+
+    public function test_profile_page_renders_with_empty_orders_when_shopify_is_unreachable(): void
+    {
+        config([
+            'services.shopify.domain' => 'test-shop.myshopify.com',
+            'services.shopify.admin_token' => 'admin-test-token',
+            'services.shopify.api_version' => '2025-01',
+        ]);
+
+        Http::fake(fn () => Http::response(['errors' => [['message' => 'Internal error']]], 500));
+
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->get('/profile');
+
+        $response->assertOk();
+        $response->assertInertia(fn (Assert $page) => $page
+            ->component('Profile/Edit')
+            ->where('orders', []));
     }
 
     public function test_profile_information_can_be_updated(): void

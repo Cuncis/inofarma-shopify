@@ -66,7 +66,7 @@ export default function ProductCard({ product, showQuickBuy = false, variant = '
                 <button
                     type="button"
                     disabled={isSoldOut}
-                    onClick={() => addItem(product)}
+                    onClick={() => addItem(product.id)}
                     className="mt-3 h-10 rounded-sm bg-primary-button-bg text-sm font-semibold text-primary-button-text transition-all duration-200 hover:opacity-90 active:scale-95 disabled:cursor-not-allowed disabled:bg-product-sold-out disabled:opacity-100 disabled:active:scale-100"
                 >
                     {isSoldOut ? 'Terjual Habis' : 'Tambah'}

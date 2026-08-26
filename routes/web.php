@@ -2,24 +2,22 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Storefront\CartController;
-use App\Http\Controllers\Storefront\CheckoutController;
 use App\Http\Controllers\Storefront\CollectionController;
 use App\Http\Controllers\Storefront\HomeController;
 use App\Http\Controllers\Storefront\ProductController;
 use App\Http\Controllers\Storefront\SearchController;
-use App\Http\Controllers\Webhooks\DokuWebhookController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/products/{handle}', [ProductController::class, 'show'])->name('products.show');
 Route::get('/collections/{handle}', [CollectionController::class, 'show'])->name('collections.show');
 Route::get('/cart', [CartController::class, 'show'])->name('cart.show');
-Route::get('/checkout', [CheckoutController::class, 'show'])->name('checkout.show');
-Route::post('/checkout/shipping-rates', [CheckoutController::class, 'rates'])->name('checkout.rates');
-Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
-Route::get('/checkout/selesai/{order}', [CheckoutController::class, 'complete'])->name('checkout.complete');
 
-Route::post('/webhooks/doku', [DokuWebhookController::class, 'handle'])->name('webhooks.doku');
+Route::get('/api/cart', [CartController::class, 'index'])->name('cart.api.show');
+Route::post('/api/cart/lines', [CartController::class, 'addLine'])->name('cart.api.add');
+Route::post('/api/cart/lines/update', [CartController::class, 'updateLine'])->name('cart.api.update');
+Route::post('/api/cart/lines/remove', [CartController::class, 'removeLine'])->name('cart.api.remove');
+
 Route::get('/search', [SearchController::class, 'show'])->name('search.show');
 Route::get('/search/predictive', [SearchController::class, 'predictive'])->name('search.predictive');
 

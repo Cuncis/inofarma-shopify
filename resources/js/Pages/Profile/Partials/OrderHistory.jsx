@@ -1,5 +1,3 @@
-import { Link } from '@inertiajs/react';
-
 function formatPrice(price) {
     return new Intl.NumberFormat('id-ID', {
         style: 'currency',
@@ -39,9 +37,11 @@ export default function OrderHistory({ orders }) {
                         const badge = STATUS_BADGE[order.paymentStatus] ?? STATUS_BADGE.pending;
 
                         return (
-                            <Link
+                            <a
                                 key={order.orderNumber}
-                                href={`/checkout/selesai/${order.orderNumber}`}
+                                href={order.statusPageUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
                                 className="flex flex-col gap-2 rounded-sm border border-border p-3 text-sm transition-colors hover:border-heading tablet:flex-row tablet:items-center tablet:justify-between"
                             >
                                 <div>
@@ -56,7 +56,7 @@ export default function OrderHistory({ orders }) {
                                     </span>
                                     <span className="font-semibold text-heading">{formatPrice(order.total)}</span>
                                 </div>
-                            </Link>
+                            </a>
                         );
                     })}
                 </div>

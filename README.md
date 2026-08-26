@@ -4,29 +4,22 @@ A Laravel + Inertia.js + React rebuild of the Apotek Inofarma pharmacy storefron
 
 ## What this project is
 
-This app reproduces the Shopify storefront's design and shopping flow (homepage, product/collection pages, search, cart, checkout, account) as a standalone Laravel application, using **Inertia.js** so React pages are server-routed by Laravel controllers instead of a separate SPA + REST API. There is no Shopify store connected today — product, collection, and homepage content is served from a single content service using realistic mock data shaped exactly like the eventual real data would be.
-
-Two pieces of the checkout flow **are** wired up to real third-party APIs (see below): payment via DOKU and shipping rates via Biteship. Everything else (auth, profile, order history, product/collection/search content) is native to this Laravel app.
+This app reproduces the Shopify storefront's design and shopping flow (homepage, product/collection pages, search, cart, account) as a standalone Laravel application, using **Inertia.js** so React pages are server-routed by Laravel controllers instead of a separate SPA + REST API. Homepage/product/collection content is still served from a mock content service (see below), but **cart and checkout are wired to a real Shopify store** — this app never collects payment itself.
 
 ## How this relates to Shopify
 
-The original spec (`react-laravel-replica-spec.md`, §1) describes a 3-phase plan:
+This is a real Shopify store behind the scenes, and orders **must** go through Shopify's own hosted checkout — Shopify's API License and Terms of Use require orders fulfilled through a Shopify store to be paid via Shopify Checkout (or Shopify Plus Checkout Extensibility), not a third-party payment flow bolted on outside it. Earlier revisions of this app briefly built a fully custom checkout (DOKU payment + Biteship shipping); that was removed for exactly this reason before going live.
 
-1. **Phase 1 (current state):** build the React UI against static/mock data shaped like Shopify's data so the visual rebuild is pixel-accurate.
-2. **Phase 2:** Laravel exposes endpoints that proxy Shopify's **Storefront GraphQL API** (products, collections, cart) so a Storefront access token never reaches the browser, merging in Laravel-native content (FAQ, testimonials, apotek branch locations) that isn't naturally "product" data in Shopify.
-3. **Phase 3:** swap the mock cart for Shopify's real Cart API, keeping the custom checkout (already built, see below) instead of redirecting to Shopify Checkout — Shopify would then be used only for product/inventory reads and order sync, not for taking payment.
+The current integration:
 
-The app is already structured for that migration: `app/Services/Storefront/StorefrontContentService.php` is the single seam all storefront controllers (`Home`, `Product`, `Collection`, `Search`, `Cart`) call through. Its public methods (`homepageSections()`, `productDetail()`, `browseCollection()`, `search()`, etc.) return plain arrays already shaped like what a Shopify Storefront API response would be mapped into — swapping the internals to call a real `ShopifyStorefrontClient` later means no changes to any controller or React page.
+- **Cart is real, backed by Shopify's Storefront Cart API.** `app/Services/Shopify/ShopifyStorefrontClient.php` is a thin hand-rolled GraphQL client (`Http` facade, no SDK) wrapping `cartCreate`/`cartLinesAdd`/`cartLinesUpdate`/`cartLinesRemove`/`cart`. `app/Http/Controllers/Storefront/CartController.php` exposes this to the browser via `/api/cart*` JSON endpoints, keeping the Storefront access token server-side; the Shopify cart id is kept in the Laravel session (works for guests, no login required).
+- **"Add to cart" resolves a real Shopify variant ID by product handle** (`ShopifyStorefrontClient::productVariantIdByHandle()`) at the moment an item is added — the homepage/product mock catalog (`StorefrontContentService`) doesn't carry real variant IDs itself, only handles, so this lookup is what bridges mock browsing to a real, working Shopify cart.
+- **Checkout is a plain hand-off**, not a page in this app: "Proceed to checkout" links straight to the Shopify cart's own `checkoutUrl` (`resources/js/Pages/Cart.jsx`, `resources/js/Components/Layout/CartPopover.jsx`). Shopify's hosted checkout handles payment, shipping rates, and tax entirely — this app is not involved in that step at all.
+- **Order history is a live read from Shopify**, not a local table. `app/Services/Shopify/ShopifyAdminClient.php` queries Shopify's Admin API for orders by the logged-in customer's email; `ProfileController::edit()` maps that straight into the account page's "Riwayat Pesanan" tab. There is no local `orders` table — Shopify is the only system of record for orders.
 
-Design tokens (colors, fonts, breakpoints, container widths) in `tailwind.config.js` are named 1:1 with the tokens in the original theme's `config/settings_data.json`, so a merchant's Shopify theme-setting change stays easy to sync manually or via API later.
+You'll need a Shopify custom app (Shopify Admin → Settings → Apps and sales channels → Develop apps) with Storefront API access and an Admin API token with `read_orders` scope; put the store domain and both tokens in `.env` (`SHOPIFY_STORE_DOMAIN`, `SHOPIFY_STOREFRONT_ACCESS_TOKEN`, `SHOPIFY_ADMIN_ACCESS_TOKEN` — see `.env.example`). Without these set, cart/checkout/order-history endpoints degrade gracefully (empty cart, empty order history) rather than erroring.
 
-## What's real (not mocked)
-
-- **Payment — DOKU (Jokul Checkout):** `app/Services/Payments/DokuPaymentService.php` creates a real DOKU Checkout session (HMAC-SHA256 signed request) and redirects the customer to DOKU's hosted payment page. `app/Http/Controllers/Webhooks/DokuWebhookController.php` verifies DOKU's webhook signature and marks orders paid.
-- **Shipping — Biteship:** `app/Services/Shipping/BiteshipService.php` calls Biteship's rates API live during checkout so the customer sees real courier options and prices for their postal code.
-- **Auth, profile & orders:** standard Laravel auth (Breeze-based), extended with address fields on `User` so a logged-in customer's checkout form (contact + shipping address) is pre-filled automatically. Order history is stored in Laravel's own `orders`/`order_items` tables and shown on the account page.
-
-Both DOKU and Biteship run against **sandbox/test credentials** configured via `.env` (`DOKU_*`, `BITESHIP_*` — see `.env.example`). Swap to production keys and set `DOKU_PRODUCTION=true` when ready to go live.
+Product/collection/search browsing is still mock content from `app/Services/Storefront/StorefrontContentService.php`, matching the shape a real Shopify Storefront API response would have — see `react-laravel-replica-spec.md` §1/§8 for the original phased plan to swap that for live product reads too. Design tokens (colors, fonts, breakpoints, container widths) in `tailwind.config.js` are named 1:1 with the tokens in the original theme's `config/settings_data.json`, so a merchant's Shopify theme-setting change stays easy to sync manually or via API later.
 
 ## Localization
 
@@ -35,15 +28,13 @@ The UI copy is Indonesian throughout. Framework-level messages (validation error
 ## Project layout
 
 ```
-app/Http/Controllers/Storefront/   Home, Product, Collection, Search, Cart, Checkout
-app/Http/Controllers/Webhooks/     DokuWebhookController
-app/Services/Storefront/           StorefrontContentService — the Shopify-swap seam described above
-app/Services/Payments/             DokuPaymentService
-app/Services/Shipping/             BiteshipService
-app/Models/                        User, Order, OrderItem
-resources/js/Pages/                Inertia pages (Home, Product, Collection, Cart, Checkout, Profile, Auth)
+app/Http/Controllers/Storefront/   Home, Product, Collection, Search, Cart (incl. /api/cart JSON endpoints)
+app/Services/Storefront/           StorefrontContentService — mock product/collection/homepage content
+app/Services/Shopify/              ShopifyStorefrontClient (cart), ShopifyAdminClient (order history)
+app/Models/                        User (no local Order model — Shopify is the order system of record)
+resources/js/Pages/                Inertia pages (Home, Product, Collection, Cart, Profile, Auth)
 resources/js/Components/Sections/  Homepage section components (slideshow, featured collection, FAQ, etc.)
-resources/js/Contexts/CartContext  Client-side cart state (local only until Phase 3 wires up Shopify's Cart API)
+resources/js/Contexts/CartContext  Cart state backed by the /api/cart endpoints above
 lang/id/                           Indonesian translations for framework/validation messages
 ```
 

@@ -1,11 +1,67 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Apotek Inofarma — Storefront
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A Laravel + Inertia.js + React rebuild of the Apotek Inofarma pharmacy storefront, originally a Shopify theme ("Warehouse"). The full spec this project was built from lives in [`react-laravel-replica-spec.md`](react-laravel-replica-spec.md).
+
+## What this project is
+
+This app reproduces the Shopify storefront's design and shopping flow (homepage, product/collection pages, search, cart, checkout, account) as a standalone Laravel application, using **Inertia.js** so React pages are server-routed by Laravel controllers instead of a separate SPA + REST API. There is no Shopify store connected today — product, collection, and homepage content is served from a single content service using realistic mock data shaped exactly like the eventual real data would be.
+
+Two pieces of the checkout flow **are** wired up to real third-party APIs (see below): payment via DOKU and shipping rates via Biteship. Everything else (auth, profile, order history, product/collection/search content) is native to this Laravel app.
+
+## How this relates to Shopify
+
+The original spec (`react-laravel-replica-spec.md`, §1) describes a 3-phase plan:
+
+1. **Phase 1 (current state):** build the React UI against static/mock data shaped like Shopify's data so the visual rebuild is pixel-accurate.
+2. **Phase 2:** Laravel exposes endpoints that proxy Shopify's **Storefront GraphQL API** (products, collections, cart) so a Storefront access token never reaches the browser, merging in Laravel-native content (FAQ, testimonials, apotek branch locations) that isn't naturally "product" data in Shopify.
+3. **Phase 3:** swap the mock cart for Shopify's real Cart API, keeping the custom checkout (already built, see below) instead of redirecting to Shopify Checkout — Shopify would then be used only for product/inventory reads and order sync, not for taking payment.
+
+The app is already structured for that migration: `app/Services/Storefront/StorefrontContentService.php` is the single seam all storefront controllers (`Home`, `Product`, `Collection`, `Search`, `Cart`) call through. Its public methods (`homepageSections()`, `productDetail()`, `browseCollection()`, `search()`, etc.) return plain arrays already shaped like what a Shopify Storefront API response would be mapped into — swapping the internals to call a real `ShopifyStorefrontClient` later means no changes to any controller or React page.
+
+Design tokens (colors, fonts, breakpoints, container widths) in `tailwind.config.js` are named 1:1 with the tokens in the original theme's `config/settings_data.json`, so a merchant's Shopify theme-setting change stays easy to sync manually or via API later.
+
+## What's real (not mocked)
+
+- **Payment — DOKU (Jokul Checkout):** `app/Services/Payments/DokuPaymentService.php` creates a real DOKU Checkout session (HMAC-SHA256 signed request) and redirects the customer to DOKU's hosted payment page. `app/Http/Controllers/Webhooks/DokuWebhookController.php` verifies DOKU's webhook signature and marks orders paid.
+- **Shipping — Biteship:** `app/Services/Shipping/BiteshipService.php` calls Biteship's rates API live during checkout so the customer sees real courier options and prices for their postal code.
+- **Auth, profile & orders:** standard Laravel auth (Breeze-based), extended with address fields on `User` so a logged-in customer's checkout form (contact + shipping address) is pre-filled automatically. Order history is stored in Laravel's own `orders`/`order_items` tables and shown on the account page.
+
+Both DOKU and Biteship run against **sandbox/test credentials** configured via `.env` (`DOKU_*`, `BITESHIP_*` — see `.env.example`). Swap to production keys and set `DOKU_PRODUCTION=true` when ready to go live.
+
+## Localization
+
+The UI copy is Indonesian throughout. Framework-level messages (validation errors, auth failures, password reset flow) are translated in `lang/id/*.php`, with `APP_LOCALE=id` / `APP_FALLBACK_LOCALE=id` set in `.env`. If you add a new validated field, add its friendly name to the `attributes` array in `lang/id/validation.php` so error messages read naturally (e.g. "Kolom kode pos wajib diisi." instead of "Kolom postal_code wajib diisi.").
+
+## Project layout
+
+```
+app/Http/Controllers/Storefront/   Home, Product, Collection, Search, Cart, Checkout
+app/Http/Controllers/Webhooks/     DokuWebhookController
+app/Services/Storefront/           StorefrontContentService — the Shopify-swap seam described above
+app/Services/Payments/             DokuPaymentService
+app/Services/Shipping/             BiteshipService
+app/Models/                        User, Order, OrderItem
+resources/js/Pages/                Inertia pages (Home, Product, Collection, Cart, Checkout, Profile, Auth)
+resources/js/Components/Sections/  Homepage section components (slideshow, featured collection, FAQ, etc.)
+resources/js/Contexts/CartContext  Client-side cart state (local only until Phase 3 wires up Shopify's Cart API)
+lang/id/                           Indonesian translations for framework/validation messages
+```
+
+## Local development
+
+```bash
+composer install
+npm install
+cp .env.example .env
+php artisan key:generate
+php artisan migrate
+
+composer run dev   # serves app + queue + logs + vite together
+```
+
+Run tests with `php artisan test --compact`, and format PHP changes with `vendor/bin/pint --dirty`.
+
+---
 
 ## About Laravel
 
@@ -19,40 +75,8 @@ Laravel is a web application framework with expressive, elegant syntax. We belie
 - [Robust background job processing](https://laravel.com/docs/queues).
 - [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
-
 ## Learning Laravel
 
 Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
 
 In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
-
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
-
-```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
-```
-
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
-
-## Contributing
-
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
-
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
